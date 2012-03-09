@@ -17,101 +17,155 @@
 DEVICE=fascinatemtd
 COMMON=aries-common
 MANUFACTURER=samsung
+EXT_F=EXTRACT_ROM_FILES
+
+prop_list="system/lib/libril.so \
+system/lib/libsecril-client.so \
+system/lib/libsec-ril40.so \
+system/bin/rild \
+system/lib/hw/gps.aries.so \
+system/vendor/bin/gpsd \
+system/vendor/etc/gps.xml \
+system/etc/gps.conf \
+system/lib/libsamsungcamera.so \
+system/vendor/lib/libsensorservice.so \
+system/vendor/lib/libsensor_yamaha_test.so \
+system/vendor/bin/geomagneticd \
+system/vendor/bin/orientationd \
+system/lib/hw/sensors.default.so \
+system/bin/pppd_runner"
+
+prop_com_list="system/vendor/bin/pvrsrvinit \
+system/vendor/firmware/bcm4329.hcd \
+system/vendor/firmware/nvram_net.txt \
+system/vendor/firmware/cypress-touchkey.bin \
+system/vendor/firmware/samsung_mfc_fw.bin \
+system/lib/egl/libGLES_android.so \
+system/vendor/lib/egl/libEGL_POWERVR_SGX540_120.so \
+system/vendor/lib/egl/libGLESv1_CM_POWERVR_SGX540_120.so \
+system/vendor/lib/egl/libGLESv2_POWERVR_SGX540_120.so \
+system/vendor/lib/hw/gralloc.aries.so \
+system/vendor/lib/libakm.so \
+system/vendor/lib/libglslcompiler.so \
+system/vendor/lib/libIMGegl.so \
+system/vendor/lib/libpvr2d.so \
+system/vendor/lib/libpvrANDROID_WSEGL.so \
+system/vendor/lib/libPVRScopeServices.so \
+system/vendor/lib/libsrv_init.so \
+system/vendor/lib/libsrv_um.so \
+system/vendor/firmware/CE147F02.bin \
+system/vendor/lib/libusc.so \
+system/lib/libActionShot.so \
+system/lib/libarccamera.so \
+system/lib/libcamera_client.so \
+system/lib/libcamerafirmwarejni.so \
+system/lib/libCaMotion.so \
+system/lib/libcaps.so \
+system/lib/libPanoraMax1.so \
+system/lib/libPlusMe.so \
+system/lib/libs3cjpeg.so \
+system/lib/libseccamera.so \
+system/lib/libseccameraadaptor.so \
+system/lib/libsecjpegencoder.so \
+system/lib/libtvout.so \
+system/lib/lib_tvoutengine.so \
+system/lib/libtvoutfimc.so \
+system/lib/libtvouthdmi.so \
+system/lib/libtvoutservice.so \
+system/bin/tvoutserver \
+system/cameradata/datapattern_420sp.yuv \
+system/cameradata/datapattern_front_420sp.yuv \
+system/firmware/CE147F00.bin \
+system/firmware/CE147F01.bin \
+system/firmware/CE147F02.bin \
+system/firmware/CE147F03.bin \
+system/bin/charging_mode \
+system/bin/playlpm \
+system/lib/libQmageDecoder.so \
+system/media/battery_charging_10.qmg \
+system/media/battery_charging_100.qmg \
+system/media/battery_charging_15.qmg \
+system/media/battery_charging_20.qmg \
+system/media/battery_charging_25.qmg \
+system/media/battery_charging_30.qmg \
+system/media/battery_charging_35.qmg \
+system/media/battery_charging_40.qmg \
+system/media/battery_charging_45.qmg \
+system/media/battery_charging_5.qmg \
+system/media/battery_charging_50.qmg \
+system/media/battery_charging_55.qmg \
+system/media/battery_charging_60.qmg \
+system/media/battery_charging_65.qmg \
+system/media/battery_charging_70.qmg \
+system/media/battery_charging_75.qmg \
+system/media/battery_charging_80.qmg \
+system/media/battery_charging_85.qmg \
+system/media/battery_charging_90.qmg \
+system/media/battery_charging_95.qmg \
+system/media/chargingwarning.qmg \
+system/media/Disconnected.qmg"
+
+prop_apk_list="system/app/PhoneConfig.apk \
+system/app/ProgramMenu.apk \
+system/app/ProgramMenuSystem.apk"
+
+chmod_list=""
+
+pull_adb_files() {
+for x in ${prop_list} ${prop_apk_list}; do
+        echo "Pulling ${x} from adb connection now..."
+        adb pull /${x} ../../../vendor/$MANUFACTURER/$DEVICE/proprietary/
+done
+
+cchm=$(echo ${chmod_list} |wc -w)
+if [ ${cchm} -gt 0 ]; then
+for x in ${chmod_list}; do
+        s=$(echo "$x" |awk -F/ '{print $NF}')
+        echo "Fixing permissions for ${x} from now..."
+        chmod 755 ../../../vendor/$MANUFACTURER/$DEVICE/proprietary/${s}
+done
+fi
+}
+
+pull_zip_files() {
+if [ -d ${EXT_F} ]; then
+        rm -rf ${EXT_F}
+fi
+unzip ${ZIP} -d ${EXT_F}
+
+for x in ${prop_list} ${prop_apk_list}; do
+        echo "Copying ${x} from ${ZIP} now..."
+        cp ${EXT_F}/${x} ../../../vendor/$MANUFACTURER/$DEVICE/proprietary/
+done
+
+for x in $${prop_com_list}; do
+        echo "Copying ${x} from ${ZIP} now..."
+        cp ${EXT_F}/${x} ../../../vendor/$MANUFACTURER/$COMMON/proprietary/
+done
+
+cchm=$(echo ${chmod_list} |wc -w)
+if [ ${cchm} -gt 0 ]; then
+for x in ${chmod_list}; do
+        s=$(echo "$x" |awk -F/ '{print $NF}')
+        echo "Fixing permissions for ${s} from now..."
+        chmod 755 ../../../vendor/$MANUFACTURER/$DEVICE/proprietary/${s}
+done
+fi
+}
 
 mkdir -p ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
+touch ../../../vendor/$MANUFACTURER/$DEVICE/proprietary/modem.bin
 mkdir -p ../../../vendor/$MANUFACTURER/$COMMON/proprietary
 
-# fascinatemtd
-adb pull /system/lib/libril.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/lib/libsecril-client.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/lib/libsec-ril40.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/bin/rild ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/lib/hw/gps.aries.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/vendor/bin/gpsd ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/vendor/etc/gps.xml ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/etc/gps.conf ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/lib/libsamsungcamera.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary/libcamera.so
-adb pull /system/vendor/lib/libsensorservice.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/vendor/lib/libsensor_yamaha_test.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/vendor/bin/geomagneticd ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/vendor/bin/orientationd ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/lib/hw/sensors.default.so ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/app/PhoneConfig.apk ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/app/ProgramMenu.apk ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/app/ProgramMenuSystem.apk ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-adb pull /system/bin/pppd_runner ../../../vendor/$MANUFACTURER/$DEVICE/proprietary
-touch ../../../vendor/$MANUFACTURER/$DEVICE/proprietary/modem.bin #fake modem.bin for build system
-
-# aries-common
-adb pull /system/vendor/bin/pvrsrvinit ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/firmware/bcm4329.hcd ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/firmware/nvram_net.txt ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/firmware/cypress-touchkey.bin ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/firmware/samsung_mfc_fw.bin ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/egl/libGLES_android.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/egl/libEGL_POWERVR_SGX540_120.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/egl/libGLESv1_CM_POWERVR_SGX540_120.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/egl/libGLESv2_POWERVR_SGX540_120.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/hw/gralloc.aries.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libakm.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libglslcompiler.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libIMGegl.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libpvr2d.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libpvrANDROID_WSEGL.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libPVRScopeServices.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libsrv_init.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libsrv_um.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/firmware/CE147F02.bin ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/vendor/lib/libusc.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libActionShot.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libarccamera.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libcamera_client.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libcamerafirmwarejni.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libCaMotion.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libcaps.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libPanoraMax1.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libPlusMe.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libs3cjpeg.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libseccamera.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libseccameraadaptor.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libsecjpegencoder.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libtvout.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/lib_tvoutengine.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libtvoutfimc.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libtvouthdmi.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/lib/libtvoutservice.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/bin/tvoutserver ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/cameradata/datapattern_420sp.yuv ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/cameradata/datapattern_front_420sp.yuv ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/firmware/CE147F00.bin ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/firmware/CE147F01.bin ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/firmware/CE147F02.bin ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/firmware/CE147F03.bin ../../../vendor/$MANUFACTURER/$COMMON/proprietary
-adb pull /system/bin/charging_mode ../../../vendor/$MANUFACTURER/$COMMON/proprietary/charging_mode
-adb pull /system/bin/playlpm ../../../vendor/$MANUFACTURER/$COMMON/proprietary/playlpm
-adb pull /system/lib/libQmageDecoder.so ../../../vendor/$MANUFACTURER/$COMMON/proprietary/libQmageDecoder.so
-adb pull /system/media/battery_charging_10.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_10.qmg
-adb pull /system/media/battery_charging_100.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_100.qmg
-adb pull /system/media/battery_charging_15.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_15.qmg
-adb pull /system/media/battery_charging_20.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_20.qmg
-adb pull /system/media/battery_charging_25.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_25.qmg
-adb pull /system/media/battery_charging_30.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_30.qmg
-adb pull /system/media/battery_charging_35.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_35.qmg
-adb pull /system/media/battery_charging_40.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_40.qmg
-adb pull /system/media/battery_charging_45.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_45.qmg
-adb pull /system/media/battery_charging_5.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_5.qmg
-adb pull /system/media/battery_charging_50.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_50.qmg
-adb pull /system/media/battery_charging_55.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_55.qmg
-adb pull /system/media/battery_charging_60.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_60.qmg
-adb pull /system/media/battery_charging_65.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_65.qmg
-adb pull /system/media/battery_charging_70.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_70.qmg
-adb pull /system/media/battery_charging_75.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_75.qmg
-adb pull /system/media/battery_charging_80.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_80.qmg
-adb pull /system/media/battery_charging_85.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_85.qmg
-adb pull /system/media/battery_charging_90.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_90.qmg
-adb pull /system/media/battery_charging_95.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/battery_charging_95.qmg
-adb pull /system/media/chargingwarning.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/chargingwarning.qmg
-adb pull /system/media/Disconnected.qmg ../../../vendor/$MANUFACTURER/$COMMON/proprietary/Disconnected.qmg
+if [ $# -eq  0 ]; then
+        pull_adb_files
+elif [ $# -eq 1 ]; then
+        ZIP="${1}"
+        pull_zip_files
+else
+        echo "Error: Too many arguments. Wanted 1 got $#"
+        exit 1
+fi
 
 (cat << EOF) | sed s/__DEVICE__/$DEVICE/g | sed s/__MANUFACTURER__/$MANUFACTURER/g > ../../../vendor/$MANUFACTURER/$DEVICE/$DEVICE-vendor-blobs.mk
 # Copyright (C) 2010 The Android Open Source Project
@@ -130,33 +184,18 @@ adb pull /system/media/Disconnected.qmg ../../../vendor/$MANUFACTURER/$COMMON/pr
 
 # Prebuilt libraries that are needed to build open-source libraries
 PRODUCT_COPY_FILES := \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libril.so:obj/lib/libril.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libsecril-client.so:obj/lib/libsecril-client.so
-
-
-# All the blobs necessary for galaxys devices
-PRODUCT_COPY_FILES += \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libril.so:system/lib/libril.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libsecril-client.so:system/lib/libsecril-client.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libsec-ril40.so:system/lib/libsec-ril40.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/gps.aries.so:system/lib/hw/gps.aries.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/rild:system/bin/rild \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/gpsd:system/vendor/bin/gpsd \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/gps.xml:system/vendor/etc/gps.xml \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/gps.conf:system/etc/gps.conf \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libcamera.so:system/lib/libsamsungcamera.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libsensorservice.so:system/vendor/lib/libsensorservice.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/libsensor_yamaha_test.so:system/vendor/lib/libsensor_yamaha_test.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/geomagneticd:system/vendor/bin/geomagneticd \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/orientationd:system/vendor/bin/orientationd \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/sensors.default.so:system/lib/hw/sensors.default.so \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/PhoneConfig.apk:system/app/PhoneConfig.apk \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/ProgramMenu.apk:system/app/ProgramMenu.apk \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/ProgramMenuSystem.apk:system/app/ProgramMenuSystem.apk \\
-    vendor/__MANUFACTURER__/__DEVICE__/proprietary/pppd_runner:system/bin/pppd_runner
-
 EOF
-
+chk_count=$(echo ${prop_list} |wc -w)
+COUNT=0
+for x in ${prop_list}; do
+        COUNT=`expr ${COUNT} + 1`
+        s=$(echo "$x" |awk -F/ '{print $NF}')
+        if [ ${COUNT} -eq ${chk_count} ]; then
+                echo "    vendor/$MANUFACTURER/$DEVICE/proprietary/${s}:${x}" >> ../../../vendor/$MANUFACTURER/$DEVICE/$DEVICE-vendor-blobs.mk
+        else
+                echo "    vendor/$MANUFACTURER/$DEVICE/proprietary/${s}:${x} \\" >> ../../../vendor/$MANUFACTURER/$DEVICE/$DEVICE-vendor-blobs.mk
+        fi
+done
 
 (cat << EOF) | sed s/__COMMON__/$COMMON/g | sed s/__MANUFACTURER__/$MANUFACTURER/g > ../../../vendor/$MANUFACTURER/$COMMON/aries-vendor-blobs.mk
 # Copyright (C) 2010 The Android Open Source Project
@@ -175,82 +214,17 @@ EOF
 
 # All the blobs necessary for galaxys devices
 PRODUCT_COPY_FILES += \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/pvrsrvinit:system/vendor/bin/pvrsrvinit \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/bcm4329.hcd:system/vendor/firmware/bcm4329.hcd \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/nvram_net.txt:system/vendor/firmware/nvram_net.txt \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/cypress-touchkey.bin:system/vendor/firmware/cypress-touchkey.bin \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/__MANUFACTURER___mfc_fw.bin:system/vendor/firmware/__MANUFACTURER___mfc_fw.bin \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libGLES_android.so:system/lib/egl/libGLES_android.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libEGL_POWERVR_SGX540_120.so:system/vendor/lib/egl/libEGL_POWERVR_SGX540_120.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libGLESv1_CM_POWERVR_SGX540_120.so:system/vendor/lib/egl/libGLESv1_CM_POWERVR_SGX540_120.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libGLESv2_POWERVR_SGX540_120.so:system/vendor/lib/egl/libGLESv2_POWERVR_SGX540_120.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/gralloc.aries.so:system/vendor/lib/hw/gralloc.aries.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libakm.so:system/vendor/lib/libakm.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libglslcompiler.so:system/vendor/lib/libglslcompiler.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libIMGegl.so:system/vendor/lib/libIMGegl.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libpvr2d.so:system/vendor/lib/libpvr2d.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libpvrANDROID_WSEGL.so:system/vendor/lib/libpvrANDROID_WSEGL.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libPVRScopeServices.so:system/vendor/lib/libPVRScopeServices.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libsrv_init.so:system/vendor/lib/libsrv_init.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libsrv_um.so:system/vendor/lib/libsrv_um.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/CE147F02.bin:system/vendor/firmware/CE147F02.bin \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libusc.so:system/vendor/lib/libusc.so
-
-# camera and tvout
-PRODUCT_COPY_FILES += \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libActionShot.so:system/lib/libActionShot.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libarccamera.so:system/lib/libarccamera.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libcamera_client.so:system/lib/libcamera_client.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libcamerafirmwarejni.so:system/lib/libcamerafirmwarejni.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libCaMotion.so:system/lib/libCaMotion.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libcaps.so:system/lib/libcaps.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libPanoraMax1.so:system/lib/libPanoraMax1.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libPlusMe.so:system/lib/libPlusMe.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libs3cjpeg.so:system/lib/libs3cjpeg.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libseccamera.so:system/lib/libseccamera.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libseccameraadaptor.so:system/lib/libseccameraadaptor.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libsecjpegencoder.so:system/lib/libsecjpegencoder.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libtvout.so:system/lib/libtvout.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/lib_tvoutengine.so:system/lib/lib_tvoutengine.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libtvoutfimc.so:system/lib/libtvoutfimc.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libtvouthdmi.so:system/lib/libtvouthdmi.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libtvoutservice.so:system/lib/libtvoutservice.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/tvoutserver:system/bin/tvoutserver \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/datapattern_420sp.yuv:system/cameradata/datapattern_420sp.yuv \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/datapattern_front_420sp.yuv:system/cameradata/datapattern_front_420sp.yuv \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/CE147F00.bin:system/firmware/CE147F00.bin \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/CE147F01.bin:system/firmware/CE147F01.bin \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/CE147F02.bin:system/firmware/CE147F02.bin \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/CE147F03.bin:system/firmware/CE147F03.bin
-
-# low power mode
-PRODUCT_COPY_FILES += \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/charging_mode:system/bin/charging_mode \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/playlpm:system/bin/playlpm \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/libQmageDecoder.so:system/lib/libQmageDecoder.so \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_10.qmg:system/media/battery_charging_10.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_100.qmg:system/media/battery_charging_100.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_15.qmg:system/media/battery_charging_15.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_20.qmg:system/media/battery_charging_20.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_25.qmg:system/media/battery_charging_25.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_30.qmg:system/media/battery_charging_30.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_35.qmg:system/media/battery_charging_35.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_40.qmg:system/media/battery_charging_40.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_45.qmg:system/media/battery_charging_45.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_5.qmg:system/media/battery_charging_5.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_50.qmg:system/media/battery_charging_50.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_55.qmg:system/media/battery_charging_55.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_60.qmg:system/media/battery_charging_60.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_65.qmg:system/media/battery_charging_65.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_70.qmg:system/media/battery_charging_70.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_75.qmg:system/media/battery_charging_75.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_80.qmg:system/media/battery_charging_80.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_85.qmg:system/media/battery_charging_85.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_90.qmg:system/media/battery_charging_90.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/battery_charging_95.qmg:system/media/battery_charging_95.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/chargingwarning.qmg:system/media/chargingwarning.qmg \\
-    vendor/__MANUFACTURER__/__COMMON__/proprietary/Disconnected.qmg:system/media/Disconnected.qmg
 EOF
-
+chk_count=$(echo ${prop_com_list} |wc -w)
+COUNT=0
+for x in ${prop_com_list}; do
+        COUNT=`expr ${COUNT} + 1`
+        s=$(echo "$x" |awk -F/ '{print $NF}')
+        if [ ${COUNT} -eq ${chk_count} ]; then
+                echo "    vendor/$MANUFACTURER/$DEVICE/proprietary/${s}:${x}" >> ../../../vendor/$MANUFACTURER/$COMMON/aries-vendor-blobs.mk
+        else
+                echo "    vendor/$MANUFACTURER/$DEVICE/proprietary/${s}:${x} \\" >> ../../../vendor/$MANUFACTURER/$COMMON/aries-vendor-blobs.mk
+        fi
+done
 
 ./setup-makefiles.sh
